@@ -1,0 +1,199 @@
+/* ICT Help Desk — Stylesheet v8 (same palette, elevated craft) */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* — identical to original v7, untouched — */
+  --col-primary:#263A52;--col-primary-deep:#1A2A3D;--col-accent:#3B7EA6;
+  --col-white:#FFFFFF;--col-surface:#F2F4F6;--col-border:#DCE1E6;
+  --col-text:#1E2A36;--col-muted:#64758A;
+  --col-open:#B84A3E;--col-progress:#C8891F;--col-resolved:#1F8A6F;--col-escalated:#6A4FA6;
+  --col-high:#B84A3E;--col-medium:#C8891F;--col-low:#1F8A6F;
+  --font-display:'Space Grotesk',sans-serif;--font-body:'Space Grotesk',sans-serif;
+  --sidebar-w:252px;--radius:10px;
+  /* — shadows re-tuned to use the brand color instead of pure black, this is most of the "not boring" work — */
+  --shadow:0 1px 2px rgba(38,58,82,.05),0 6px 18px rgba(38,58,82,.06);
+  --shadow-hover:0 3px 8px rgba(38,58,82,.08),0 14px 32px rgba(38,58,82,.10);
+  --shadow-accent:0 6px 16px -4px rgba(59,126,166,.35);
+  --transition:all .18s cubic-bezier(.4,0,.2,1)
+}
+body{font-family:var(--font-body);font-size:14px;color:var(--col-text);background:var(--col-surface);line-height:1.5}
+
+/* Layout */
+.layout{display:flex;min-height:100vh}
+
+/* Sidebar — was flat --col-primary, now a subtle depth gradient between your two existing tones */
+.sidebar{width:var(--sidebar-w);background:linear-gradient(165deg,var(--col-primary) 0%,var(--col-primary-deep) 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;transition:transform .25s;box-shadow:2px 0 24px rgba(26,42,61,.12)}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.1)}
+.brand-icon{width:38px;height:38px;background:var(--col-accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--col-primary);flex-shrink:0;box-shadow:var(--shadow-accent)}
+.brand-title{font-family:var(--font-body);font-size:14px;font-weight:700;color:#fff;line-height:1.2;letter-spacing:.01em}
+.brand-sub{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.03em}
+.sidebar-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px}
+.nav-section{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:14px 10px 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;color:rgba(255,255,255,.72);text-decoration:none;font-size:13.5px;transition:var(--transition)}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;transform:translateX(2px)}
+/* active state was a flat accent fill; now a soft glass tint plus a left accent bar, reads calmer and more "product" */
+.nav-item.active{background:rgba(59,126,166,.18);color:#fff;font-weight:600;box-shadow:inset 3px 0 0 var(--col-accent)}
+.nav-icon{font-size:15px;flex-shrink:0}
+.sidebar-footer{padding:14px;border-top:1px solid rgba(255,255,255,.1)}
+.user-chip{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.user-avatar{width:34px;height:34px;background:var(--col-accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--col-primary);flex-shrink:0;box-shadow:var(--shadow-accent)}
+.user-name{font-size:12.5px;color:#fff;font-weight:600}
+.user-role{font-size:10.5px;color:rgba(255,255,255,.5)}
+.logout-btn{display:block;text-align:center;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);padding:8px;border-radius:8px;text-decoration:none;font-size:12.5px;font-weight:500;transition:var(--transition)}
+.logout-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+
+/* Main */
+.main-content{margin-left:var(--sidebar-w);flex:1;padding:30px 34px;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.mobile-menu-btn{display:none;background:var(--col-white);border:1.5px solid var(--col-border);border-radius:8px;width:38px;height:38px;font-size:16px;cursor:pointer;align-items:center;justify-content:center}
+.page-header{margin-bottom:26px}
+.page-title{font-family:var(--font-body);font-size:23px;font-weight:700;color:var(--col-primary);letter-spacing:-.01em}
+.page-sub{font-size:13px;color:var(--col-muted);margin-top:3px}
+
+/* Stats — was flat left-border cards on a flat shadow; now top-border with hover lift and a colored ambient glow using the card's own status color */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:26px}
+.stat-card{background:var(--col-white);border-radius:var(--radius);padding:18px 18px 16px;box-shadow:var(--shadow);border:1px solid var(--col-border);border-top:3px solid var(--col-border);transition:var(--transition);position:relative}
+.stat-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-3px)}
+.stat-card.total{border-top-color:var(--col-primary)}
+.stat-card.open{border-top-color:var(--col-open)}
+.stat-card.progress{border-top-color:var(--col-progress)}
+.stat-card.resolved{border-top-color:var(--col-resolved)}
+.stat-label{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--col-muted);margin-bottom:9px}
+.stat-value{font-family:var(--font-display);font-size:30px;font-weight:600;color:var(--col-primary);line-height:1;letter-spacing:-.02em}
+.stat-card.open .stat-value{color:var(--col-open)}
+.stat-card.progress .stat-value{color:var(--col-progress)}
+.stat-card.resolved .stat-value{color:var(--col-resolved)}
+
+/* Card */
+.card{background:var(--col-white);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--col-border);overflow:hidden;margin-bottom:20px;transition:var(--transition)}
+.card-header{padding:17px 22px;border-bottom:1px solid var(--col-border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:15px;font-weight:600;color:var(--col-primary)}
+.card-body{padding:22px}
+
+/* Table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{text-align:left;padding:11px 16px;background:var(--col-surface);color:var(--col-muted);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--col-border)}
+tbody tr{border-bottom:1px solid var(--col-border);transition:background .12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#F8FAFD}
+td{padding:13px 16px;vertical-align:middle}
+/* ticket ID column: gives reference numbers their own visual identity, was plain text before */
+td.ticket-ref{font-family:var(--font-display);color:var(--col-accent);font-weight:600;font-size:12.5px}
+
+/* Badges — same background/foreground pairs as v7, just with a hairline border in the same hue so they don't look like flat stickers */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid transparent}
+.badge-open{background:#F7E4E1;color:var(--col-open);border-color:rgba(184,74,62,.18)}
+.badge-progress{background:#F7EAD1;color:#7A5714;border-color:rgba(200,137,31,.2)}
+.badge-resolved{background:#D9EEE3;color:#155E42;border-color:rgba(31,138,111,.2)}
+.badge-escalated{background:#E7E0F0;color:#4F3670;border-color:rgba(106,79,166,.2)}
+.badge-closed{background:#EAECF0;color:var(--col-muted)}
+.pri-high{background:#F7E4E1;color:var(--col-high);border:1px solid rgba(184,74,62,.18)}
+.pri-medium{background:#F7EAD1;color:#7A5714;border:1px solid rgba(200,137,31,.2)}
+.pri-low{background:#D9EEE3;color:#155E42;border:1px solid rgba(31,138,111,.2)}
+
+/* Buttons — added a soft ambient shadow in the button's own color, the single biggest "expensive vs flat" cue */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 17px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;border:none;transition:var(--transition);font-family:inherit}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--col-primary);color:#fff;box-shadow:0 6px 16px -6px rgba(38,58,82,.5)}
+.btn-primary:hover{background:var(--col-primary-deep);box-shadow:0 8px 20px -6px rgba(38,58,82,.6);transform:translateY(-1px)}
+.btn-accent{background:var(--col-accent);color:var(--col-primary);font-weight:700;box-shadow:var(--shadow-accent)}
+.btn-accent:hover{transform:translateY(-1px);box-shadow:0 8px 20px -4px rgba(59,126,166,.45)}
+.btn-outline{background:transparent;border:1.5px solid var(--col-border);color:var(--col-text)}
+.btn-outline:hover{border-color:var(--col-accent);color:var(--col-accent);opacity:1}
+.btn-danger{background:#F7E4E1;color:var(--col-open)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn:not(.btn-primary):not(.btn-accent):hover{opacity:.88}
+
+/* Forms */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.span2{grid-column:span 2}
+label{font-size:12px;font-weight:600;color:var(--col-muted);text-transform:uppercase;letter-spacing:.05em}
+input,select,textarea{padding:9px 12px;border:1.5px solid var(--col-border);border-radius:8px;font-size:13.5px;font-family:inherit;color:var(--col-text);background:var(--col-white);transition:var(--transition);width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--col-primary);box-shadow:0 0 0 4px rgba(38,58,82,.1)}
+textarea{resize:vertical;min-height:90px}
+.form-actions{margin-top:20px;display:flex;gap:10px}
+
+/* Password toggle */
+.pw-wrap{position:relative;display:flex}
+.pw-wrap input{padding-right:42px}
+.pw-toggle{position:absolute;right:0;top:0;height:100%;padding:0 12px;background:none;border:none;cursor:pointer;font-size:15px;color:var(--col-muted);border-radius:0 8px 8px 0}
+.pw-toggle:hover{color:var(--col-primary)}
+
+/* Alerts */
+.alert{padding:12px 16px;border-radius:8px;font-size:13.5px;margin-bottom:18px;border:1px solid transparent}
+.alert-success{background:#D9EEE3;color:#154430;border-color:rgba(31,138,111,.22)}
+.alert-error{background:#F7E4E1;color:#742A1F;border-color:rgba(184,74,62,.22)}
+.alert-info{background:#E2EBF1;color:#263A52;border-color:rgba(59,126,166,.22)}
+
+/* Login — was a flat primary background; now a gradient matching the sidebar so the whole product feels like one system */
+.login-page{min-height:100vh;background:linear-gradient(165deg,var(--col-primary) 0%,var(--col-primary-deep) 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{background:var(--col-white);width:100%;max-width:420px;border-radius:14px;padding:38px 38px 34px;box-shadow:0 30px 70px rgba(15,25,36,.4)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.login-logo-icon{width:46px;height:46px;background:var(--col-primary);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--col-accent);font-size:13px;box-shadow:0 8px 20px -6px rgba(38,58,82,.4)}
+.login-logo-text{font-family:var(--font-body);font-size:16px;font-weight:700;color:var(--col-primary)}
+.login-logo-sub{font-size:12px;color:var(--col-muted)}
+.login-title{font-family:var(--font-body);font-size:20px;font-weight:700;color:var(--col-primary);margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--col-muted);margin-bottom:24px}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.toolbar-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search-input{max-width:220px}
+
+/* Ticket detail */
+.ticket-meta{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+.meta-label{font-size:10.5px;font-weight:600;color:var(--col-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.meta-val{font-size:13.5px;color:var(--col-text)}
+.timeline-item{display:flex;gap:12px}
+.tl-dot{width:10px;height:10px;background:var(--col-accent);border-radius:50%;flex-shrink:0;margin-top:5px;box-shadow:0 0 0 4px rgba(59,126,166,.14)}
+.tl-meta{font-size:11.5px;color:var(--col-muted);margin-bottom:4px}
+.tl-note{font-size:13.5px}
+.tag-pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;background:var(--col-surface);color:var(--col-muted);border:1px solid var(--col-border)}
+
+/* Notification bell */
+.notif-bell{background:var(--col-white);border:1.5px solid var(--col-border);border-radius:9px;width:38px;height:38px;font-size:17px;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;transition:var(--transition)}
+.notif-bell:hover{background:var(--col-surface);box-shadow:var(--shadow)}
+.notif-badge{position:absolute;top:-5px;right:-5px;background:var(--col-open);color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;line-height:1;box-shadow:0 2px 6px rgba(184,74,62,.4)}
+
+/* Settings */
+.settings-section{border-bottom:1px solid var(--col-border);padding:18px 0}
+.settings-section:last-child{border-bottom:none}
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.toggle-switch{position:relative;width:42px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--col-border);border-radius:24px;transition:background .2s}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.toggle-switch input:checked+.toggle-slider{background:var(--col-resolved)}
+.toggle-switch input:checked+.toggle-slider::before{transform:translateX(18px)}
+
+/* Responsive */
+@media(max-width:1024px){.stats-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);position:fixed;z-index:999}
+  .sidebar.open{transform:translateX(0)}
+  .main-content{margin-left:0;padding:16px 14px}
+  .mobile-menu-btn{display:flex}
+  .form-grid{grid-template-columns:1fr}
+  .form-group.span2{grid-column:span 1}
+  div[style*="grid-template-columns:1fr 340px"]{display:block}
+  div[style*="grid-template-columns:1fr 400px"]{display:block}
+  div[style*="grid-template-columns:1fr 320px"]{display:block}
+  div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat-value{font-size:26px}
+  table{font-size:12px}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr}
+  .login-box{padding:24px 18px}
+  .toolbar{flex-direction:column;align-items:stretch}
+  .toolbar-left{flex-wrap:wrap}
+}
+@media print{.sidebar,.btn,.topbar,.toolbar{display:none!important}.main-content{margin:0;padding:12px}}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;gap:6px;padding:14px 20px;border-top:1px solid var(--col-border);flex-wrap:wrap}
+.page-gap{color:var(--col-muted);padding:0 4px;font-size:13px}

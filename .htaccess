@@ -1,0 +1,26 @@
+# ICT Help Desk — root .htaccess
+# Blocks direct browser access to config, environment, and data files.
+# Apache's mod_rewrite/mod_authz must be enabled (standard on XAMPP).
+
+<FilesMatch "^(\.env(\.example)?|config\.php|mail_config\.php|imap_config\.php|env\.php|database\.sql|migration_.*\.sql|seed_data\.sql|fix_login\.sql)$">
+    Require all denied
+</FilesMatch>
+
+# Block access to dotfiles in general (.env, .git, etc.)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Prevent directory listing
+Options -Indexes
+
+# Basic security headers (also set in PHP via auth.php; harmless if duplicated)
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+<FilesMatch "\.ps1$">
+    Require all denied
+</FilesMatch>
