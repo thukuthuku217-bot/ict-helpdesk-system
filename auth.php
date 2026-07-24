@@ -174,3 +174,12 @@ function paginationLinks($page, $totalPages, $qs = '') {
     $out .= '</div>';
     return $out;
 }
+
+function publicTicketToken($ticketId, $ticketNo) {
+    return substr(hash_hmac('sha256', $ticketId . '|' . $ticketNo, PUBLIC_TOKEN_SECRET), 0, 40);
+}
+
+function verifyPublicTicketToken($ticketId, $ticketNo, $token) {
+    $expected = publicTicketToken($ticketId, $ticketNo);
+    return hash_equals($expected, (string)$token);
+}

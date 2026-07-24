@@ -190,7 +190,7 @@ function notifyTicketCreated($db, $ticketId) {
     $t = $s->get_result()->fetch_assoc();
     if (!$t) return;
     $admins = $db->query("SELECT full_name,email FROM users WHERE role='admin' AND email != ''");
-    $link   = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '') . "/ticket_view.php?id={$ticketId}";
+    $link   = APP_URL . "/ticket_view.php?id={$ticketId}";
     $body   = "<p>A new ticket has been submitted.</p>
                <p><strong>Ticket:</strong> " . htmlspecialchars($t['ticket_no']) . "<br>
                <strong>Subject:</strong> " . htmlspecialchars($t['subject']) . "<br>
@@ -214,7 +214,7 @@ function notifyTicketAssigned($db, $ticketId, $techId) {
     $s2->execute();
     $tech = $s2->get_result()->fetch_assoc();
     if (!$t || !$tech || empty($tech['email'])) return;
-    $link = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '') . "/ticket_view.php?id={$ticketId}";
+    $link = APP_URL . "/ticket_view.php?id={$ticketId}";
     $body = "<p>A ticket has been assigned to you.</p>
              <p><strong>Ticket:</strong> " . htmlspecialchars($t['ticket_no']) . "<br>
              <strong>Subject:</strong> " . htmlspecialchars($t['subject']) . "<br>
@@ -225,12 +225,20 @@ function notifyTicketAssigned($db, $ticketId, $techId) {
 
 function notifyStatusUpdated($db, $ticketId, $newStatus, $note) {
     if ($newStatus !== 'Resolved') return;
-    $s = $db->prepare("SELECT t.ticket_no,t.subject,COALESCE(s.full_name,t.client_name) AS full_name,COALESCE(s.email,t.client_email) AS email FROM tickets t LEFT JOIN users s ON s.id=t.submitted_by WHERE t.id=?");
+    $s = $db->prepare("SELECT t.ticket_no,t.subject,t.submitted_by,COALESCE(s.full_name,t.client_name) AS full_name,COALESCE(s.email,t.client_email) AS email FROM tickets t LEFT JOIN users s ON s.id=t.submitted_by WHERE t.id=?");
     $s->bind_param('i', $ticketId);
     $s->execute();
     $t = $s->get_result()->fetch_assoc();
     if (!$t || empty($t['email'])) return;
-    $link    = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '') . "/ticket_view.php?id={$ticketId}";
+
+    if (empty($t['submitted_by'])) {
+        // Email-sourced ticket with no linked account: give a token-secured public view link
+        $token = publicTicketToken($ticketId, $t['ticket_no']);
+        $link  = APP_URL . "/ticket_public.php?id={$ticketId}&token={$token}";
+    } else {
+        $link = APP_URL . "/ticket_view.php?id={$ticketId}";
+    }
+
     $subject = 'Your Ticket Has Been Resolved: ' . $t['ticket_no'];
     $body    = "<p>Good news! Your ICT issue has been resolved.</p>
                 <p><strong>Ticket:</strong> " . htmlspecialchars($t['ticket_no']) . "<br>
@@ -247,7 +255,7 @@ function notifySlaWarning($db, $ticketId) {
     $s->execute();
     $t = $s->get_result()->fetch_assoc();
     if (!$t || empty($t['email'])) return;
-    $link = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '') . "/ticket_view.php?id={$ticketId}";
+    $link = APP_URL . "/ticket_view.php?id={$ticketId}";
     $body = "<p>This ticket is approaching its SLA deadline.</p>
              <p><strong>Ticket:</strong> " . htmlspecialchars($t['ticket_no']) . "<br>
              <strong>Subject:</strong> " . htmlspecialchars($t['subject']) . "</p>
@@ -262,7 +270,7 @@ function notifyAccountCreated($db, $newUserId) {
     $s->execute();
     $u = $s->get_result()->fetch_assoc();
     if (!$u || empty($u['email'])) return;
-    $loginLink = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '') . "/login.php";
+    $loginLink = APP_URL . "/login.php";
     $body = "<p>Hi " . htmlspecialchars($u['full_name']) . ",</p>
              <p>Welcome to the <strong>ICT Help Desk</strong>! Your account has been created successfully.</p>
              <p><strong>Email:</strong> " . htmlspecialchars($u['email']) . "<br>
@@ -280,7 +288,7 @@ function notifyEscalation($db, $ticketId) {
     $t = $s->get_result()->fetch_assoc();
     if (!$t) return;
     $admins = $db->query("SELECT full_name,email FROM users WHERE role='admin' AND email != ''");
-    $link   = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '') . "/ticket_view.php?id={$ticketId}";
+    $link   = APP_URL . "/ticket_view.php?id={$ticketId}";
     $body   = "<p>A ticket has been automatically escalated due to SLA breach.</p>
                <p><strong>Ticket:</strong> " . htmlspecialchars($t['ticket_no']) . "<br>
                <strong>Subject:</strong> " . htmlspecialchars($t['subject']) . "</p>
