@@ -21,6 +21,12 @@ if ($u['role'] === 'technician' && (int)$ticket['assigned_to']  !== (int)$u['id'
 
 $isAssignee = in_array($u['role'], array('technician', 'staff'), true) && (int)$ticket['assigned_to'] === (int)$u['id'];
 
+$cannedResponses = array();
+if ($isAssignee) {
+    $crRes = $db->query("SELECT id,title,body FROM canned_responses ORDER BY title");
+    while ($cr = $crRes->fetch_assoc()) $cannedResponses[] = $cr;
+}
+
 $msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['note']) && $isAssignee) {
     verifyCsrfToken();
@@ -167,9 +173,18 @@ include 'header.php';
               <?php endforeach; ?>
             </select>
           </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label>Canned Response <span style="font-weight:400;font-size:11px;color:var(--col-muted)">(optional)</span></label>
+            <select onchange="document.getElementById('noteTextarea').value = this.value ? this.options[this.selectedIndex].getAttribute('data-body') : document.getElementById('noteTextarea').value;">
+              <option value="">— none —</option>
+              <?php foreach ($cannedResponses as $cr): ?>
+              <option value="<?php echo $cr['id']; ?>" data-body="<?php echo clean($cr['body']); ?>"><?php echo clean($cr['title']); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
           <div class="form-group" style="margin-bottom:16px">
             <label>Progress / Resolution Note</label>
-            <textarea name="note" rows="4" required maxlength="2000" placeholder="Describe progress. If marking Resolved, this becomes the resolution comment shown to staff…"></textarea>
+            <textarea id="noteTextarea" name="note" rows="4" required maxlength="2000" placeholder="Describe progress. If marking Resolved, this becomes the resolution comment shown to staff…"></textarea>
           </div>
           <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Save Update</button>
         </form>

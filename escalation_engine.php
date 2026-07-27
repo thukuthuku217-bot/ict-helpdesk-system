@@ -25,7 +25,9 @@ function runEscalationCheck($db) {
         $cr  = strtotime($t['created_at']);
         $due = strtotime($t['sla_resolution_due']);
         $now = time();
-        $pct = ($due - $cr) > 0 ? (($now - $cr) / ($due - $cr) * 100) : 0;
+        $totalBizMin   = businessMinutesBetween($cr, $due);
+        $elapsedBizMin = businessMinutesBetween($cr, $now);
+        $pct = $totalBizMin > 0 ? ($elapsedBizMin / $totalBizMin * 100) : 0;
         if ($pct >= (float)$t['warning_threshold_pct']) {
             $tid = (int)$t['id'];
             $db->query("UPDATE tickets SET sla_warning_sent=1 WHERE id=$tid");

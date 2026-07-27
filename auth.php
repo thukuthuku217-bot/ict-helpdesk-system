@@ -91,13 +91,13 @@ function priorityClass($p) {
 }
 
 function notify($db, $userId, $title, $message, $link = '', $type = 'ticket') {
-    if (empty($user_id) || (int)$user_id <= 0) {
-        error_log("notify() skipped: invalid user_id (" . var_export($user_id, true) . ")");
+    if (empty($userId) || (int)$userId <= 0) {
+        error_log("notify() skipped: invalid user_id (" . var_export($userId, true) . ")");
         return false;
     }
     $stmt = $db->prepare("INSERT INTO notifications (user_id,type,title,message,link) VALUES (?,?,?,?,?)");
     $stmt->bind_param('issss', $userId, $type, $title, $message, $link);
-    $stmt->execute();
+    return $stmt->execute();
 }
 
 function notifyRole($db, $role, $title, $message, $link = '', $type = 'ticket') {
@@ -122,12 +122,72 @@ function getSlaRule($db, $priority) {
     return $r ? $r : array('response_minutes' => 480, 'resolution_minutes' => 4320, 'warning_threshold_pct' => 80);
 }
 
+function isBusinessDay($ts) {
+    $day  = (int)date('N', $ts);
+    $days = array_map('intval', explode(',', BIZ_DAYS));
+    return in_array($day, $days, true);
+}
+
+function businessWindowStart($ts) {
+    return strtotime(date('Y-m-d', $ts) . ' ' . sprintf('%02d:00:00', BIZ_START_HOUR));
+}
+
+function businessWindowEnd($ts) {
+    return strtotime(date('Y-m-d', $ts) . ' ' . sprintf('%02d:00:00', BIZ_END_HOUR));
+}
+
+function nextBusinessStart($ts) {
+    $cursor = $ts;
+    $guard  = 0;
+    while ($guard++ < 30) {
+        if (isBusinessDay($cursor)) {
+            $wStart = businessWindowStart($cursor);
+            $wEnd   = businessWindowEnd($cursor);
+            if ($cursor < $wStart) return $wStart;
+            if ($cursor < $wEnd)   return $cursor;
+        }
+        $cursor = strtotime('+1 day', strtotime(date('Y-m-d 00:00:00', $cursor)));
+    }
+    return $cursor;
+}
+
+function addBusinessMinutes($startTs, $minutes) {
+    $remaining = (float)$minutes;
+    $cursor    = nextBusinessStart($startTs);
+    $guard     = 0;
+    while ($remaining > 0 && $guard++ < 3650) {
+        $wEnd  = businessWindowEnd($cursor);
+        $avail = ($wEnd - $cursor) / 60;
+        if ($remaining <= $avail) {
+            $cursor += (int)round($remaining * 60);
+            $remaining = 0;
+        } else {
+            $remaining -= $avail;
+            $cursor = nextBusinessStart(strtotime('+1 day', strtotime(date('Y-m-d 00:00:00', $cursor))));
+        }
+    }
+    return $cursor;
+}
+
+function businessMinutesBetween($startTs, $endTs) {
+    if ($endTs <= $startTs) return 0;
+    $cursor = nextBusinessStart($startTs);
+    $total  = 0;
+    $guard  = 0;
+    while ($cursor < $endTs && $guard++ < 3650) {
+        $wEnd = min(businessWindowEnd($cursor), $endTs);
+        if ($wEnd > $cursor) $total += ($wEnd - $cursor) / 60;
+        $cursor = nextBusinessStart(strtotime('+1 day', strtotime(date('Y-m-d 00:00:00', $cursor))));
+    }
+    return $total;
+}
+
 function calculateSlaDeadlines($db, $priority, $createdAt) {
     $rule = getSlaRule($db, $priority);
     $c    = strtotime($createdAt);
     return array(
-        date('Y-m-d H:i:s', $c + $rule['response_minutes']   * 60),
-        date('Y-m-d H:i:s', $c + $rule['resolution_minutes'] * 60),
+        date('Y-m-d H:i:s', addBusinessMinutes($c, $rule['response_minutes'])),
+        date('Y-m-d H:i:s', addBusinessMinutes($c, $rule['resolution_minutes'])),
     );
 }
 
@@ -138,7 +198,9 @@ function slaState($due, $createdAt, $met, $warnPct = 80) {
     $d   = strtotime($due);
     $cr  = strtotime($createdAt);
     if ($now > $d) return array('label' => 'Overdue', 'class' => 'badge-open');
-    $pct = ($d - $cr) > 0 ? (($now - $cr) / ($d - $cr) * 100) : 100;
+    $totalBizMin   = businessMinutesBetween($cr, $d);
+    $elapsedBizMin = businessMinutesBetween($cr, $now);
+    $pct = $totalBizMin > 0 ? ($elapsedBizMin / $totalBizMin * 100) : 100;
     $h   = round(($d - $now) / 3600, 1);
     if ($pct >= $warnPct) return array('label' => "Approaching Breach ({$h}h)", 'class' => 'badge-progress');
     return array('label' => "Within SLA ({$h}h left)", 'class' => 'badge-resolved');

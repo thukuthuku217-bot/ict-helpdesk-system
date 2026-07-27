@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/auth.php';
 requireRole('admin');
 $db     = getDB();
@@ -41,14 +41,17 @@ include 'header.php';
 </div>
 <?php if (isset($_GET['msg'])): ?><div class="alert alert-success"><?php echo clean($_GET['msg']); ?></div><?php endif; ?>
 
-<?php if (!empty($single) && !$single['assigned_to']): ?>
+<?php if (!empty($single)): ?>
 <div class="card" style="max-width:540px;margin-bottom:24px">
   <div class="card-header">
-    <span class="card-title">Assign: <?php echo clean($single['ticket_no']); ?></span>
+    <span class="card-title"><?php echo $single['assigned_to'] ? 'Reassign' : 'Assign'; ?>: <?php echo clean($single['ticket_no']); ?></span>
     <a href="assign.php" class="btn btn-outline btn-sm">Clear</a>
   </div>
   <div class="card-body">
     <p style="margin-bottom:14px;font-size:13.5px"><strong>Subject:</strong> <?php echo clean($single['subject']); ?></p>
+    <?php if ($single['assigned_to']): ?>
+    <p style="margin-bottom:14px;font-size:13px;color:var(--col-muted)">Currently assigned to <strong><?php echo clean($single['tech_name']); ?></strong>. Selecting someone else below will reassign this ticket.</p>
+    <?php endif; ?>
 
     <form method="POST" action="set_department.php" style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #eee">
       <?php echo csrfField(); ?>
@@ -75,21 +78,19 @@ include 'header.php';
         <label>Assign To — <?php echo clean($single['dept_name']); ?></label>
         <select name="tech_id" required>
           <option value="">— select —</option>
-          <?php echo assigneeOptions($usersByDept[$single['department_id']] ?? array()); ?>
+          <?php echo assigneeOptions($usersByDept[$single['department_id']] ?? array(), $single['assigned_to']); ?>
         </select>
       </div>
       <?php if (empty($usersByDept[$single['department_id']])): ?>
       <p style="font-size:12px;color:var(--col-muted);margin-bottom:10px">No technician or staff is set up in this department yet.</p>
       <?php endif; ?>
-      <button class="btn btn-primary">Save Assignment</button>
+      <button class="btn btn-primary"><?php echo $single['assigned_to'] ? 'Save Reassignment' : 'Save Assignment'; ?></button>
     </form>
     <?php else: ?>
     <p style="font-size:13px;color:var(--col-muted)">Set a department above to see who's eligible for assignment.</p>
     <?php endif; ?>
   </div>
 </div>
-<?php elseif (!empty($single) && $single['assigned_to']): ?>
-<div class="alert alert-info">Ticket <?php echo clean($single['ticket_no']); ?> is already assigned to <?php echo clean($single['tech_name']); ?>.</div>
 <?php endif; ?>
 
 <div class="card">

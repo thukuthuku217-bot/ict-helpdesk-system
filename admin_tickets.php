@@ -47,6 +47,10 @@ $stmt->bind_param($data_types, ...$data_params);
 $stmt->execute();
 $tickets = $stmt->get_result();
 
+$bulkAssignees = array();
+$baRes = $db->query("SELECT id,full_name,role FROM users WHERE role IN ('technician','staff') ORDER BY role,full_name");
+while ($ba = $baRes->fetch_assoc()) $bulkAssignees[] = $ba;
+
 $qs = 'status=' . urlencode($filter) . '&amp;q=' . urlencode($search);
 include 'header.php';
 ?>
@@ -102,15 +106,39 @@ document.getElementById('checkEmailForm').addEventListener('submit', function (e
 });
 </script>
 <div class="card">
+  <form method="POST" action="bulk_ticket_action.php" id="bulkForm">
+  <?php echo csrfField(); ?>
+  <input type="hidden" name="qs_status" value="<?php echo clean($filter); ?>">
+  <input type="hidden" name="qs_q" value="<?php echo clean($search); ?>">
+  <input type="hidden" name="qs_page" value="<?php echo (int)$page; ?>">
+  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--col-border);background:var(--col-surface)">
+    <span style="font-size:12.5px;color:var(--col-muted)">Bulk actions (select tickets below):</span>
+    <select name="bulk_status" style="padding:5px 8px;font-size:12.5px">
+      <option value="">— set status —</option>
+      <?php foreach (array('Open','In Progress','Escalated','Resolved') as $bs): ?>
+      <option value="<?php echo $bs; ?>"><?php echo $bs; ?></option>
+      <?php endforeach; ?>
+    </select>
+    <button type="submit" name="bulk_action" value="status" class="btn btn-outline btn-sm">Apply Status</button>
+    <span style="color:var(--col-border)">|</span>
+    <select name="bulk_assignee" style="padding:5px 8px;font-size:12.5px">
+      <option value="">— assign to —</option>
+      <?php foreach ($bulkAssignees as $ba): ?>
+      <option value="<?php echo $ba['id']; ?>"><?php echo clean($ba['full_name']); ?> (<?php echo ucfirst($ba['role']); ?>)</option>
+      <?php endforeach; ?>
+    </select>
+    <button type="submit" name="bulk_action" value="assign" class="btn btn-accent btn-sm">Apply Assignment</button>
+  </div>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Ticket #</th><th>Subject</th><th>Priority</th><th>Status</th><th>SLA</th><th>Submitted By</th><th>Assigned To</th><th>Dept</th><th>Date</th><th></th></tr></thead>
+      <thead><tr><th style="width:36px"><input type="checkbox" id="bulkSelectAll"></th><th>Ticket #</th><th>Subject</th><th>Priority</th><th>Status</th><th>SLA</th><th>Submitted By</th><th>Assigned To</th><th>Dept</th><th>Date</th><th></th></tr></thead>
       <tbody>
         <?php $any = false; while ($row = $tickets->fetch_assoc()): $any = true;
           $rule = getSlaRule($db, $row['priority']);
           $sla  = slaState($row['sla_resolution_due'], $row['created_at'], $row['status']==='Resolved', $rule['warning_threshold_pct']);
         ?>
         <tr>
+          <td><input type="checkbox" name="ticket_ids[]" value="<?php echo (int)$row['id']; ?>" class="bulkCheckbox"></td>
           <td><strong><?php echo clean($row['ticket_no']); ?></strong></td>
           <td><?php echo clean($row['subject']); ?></td>
           <td><span class="badge <?php echo priorityClass($row['priority']); ?>"><?php echo $row['priority']; ?></span></td>
@@ -122,15 +150,22 @@ document.getElementById('checkEmailForm').addEventListener('submit', function (e
           <td><?php echo date('d M Y', strtotime($row['created_at'])); ?></td>
           <td style="display:flex;gap:6px">
             <a href="ticket_view.php?id=<?php echo $row['id']; ?>" class="btn btn-outline btn-sm">View</a>
-            <?php if (!$row['assigned_to']): ?><a href="assign.php?id=<?php echo $row['id']; ?>" class="btn btn-accent btn-sm">Assign</a><?php endif; ?>
+            <?php if (!$row['assigned_to']): ?><a href="assign.php?id=<?php echo $row['id']; ?>" class="btn btn-accent btn-sm">Assign</a><?php else: ?><a href="assign.php?id=<?php echo $row['id']; ?>" class="btn btn-outline btn-sm">Reassign</a><?php endif; ?>
           </td>
         </tr>
         <?php endwhile; if (!$any): ?>
-        <tr><td colspan="10" style="text-align:center;padding:28px;color:var(--col-muted)">No tickets found.</td></tr>
+        <tr><td colspan="11" style="text-align:center;padding:28px;color:var(--col-muted)">No tickets found.</td></tr>
         <?php endif; ?>
       </tbody>
     </table>
   </div>
+  </form>
+  <script>
+  document.getElementById('bulkSelectAll').addEventListener('change', function () {
+    var self = this;
+    document.querySelectorAll('.bulkCheckbox').forEach(function (cb) { cb.checked = self.checked; });
+  });
+  </script>
   <?php echo paginationLinks($page, $total_pages, $qs); ?>
 </div>
 <?php include 'footer.php';

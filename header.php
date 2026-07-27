@@ -46,6 +46,7 @@ $unread = unreadCount($db2, (int)$u['id']);
         <a href="users.php"          class="nav-item <?php echo $self==='users.php'?'active':''; ?>"><span class="nav-icon">&#9823;</span> Users &amp; Departments</a>
         <a href="reports.php"        class="nav-item <?php echo $self==='reports.php'?'active':''; ?>"><span class="nav-icon">&#9638;</span> Reports</a>
         <a href="email_settings.php" class="nav-item <?php echo $self==='email_settings.php'?'active':''; ?>"><span class="nav-icon">&#9993;</span> Email Settings</a>
+        <a href="canned_responses.php" class="nav-item <?php echo $self==='canned_responses.php'?'active':''; ?>"><span class="nav-icon">&#128172;</span> Canned Responses</a>
         <a href="settings.php"       class="nav-item <?php echo $self==='settings.php'?'active':''; ?>"><span class="nav-icon">&#9881;</span> Settings</a>
       <?php endif; ?>
 
